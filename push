@@ -1,0 +1,136 @@
+#!/bin/bash
+
+## Bash script to automate the gathering of changes in a git repo together
+## into a commit, and pushing that commit up to the repo, creating a PR.
+## This script:
+##
+##   - Adds non-ignored changes to current git staging with: git add .
+##   - Commits these changes with:
+##      - If this is our first commit, prompt for a new commit message
+##      - If this is not our first commit: commit --amend --no-edit
+##   - Pushes this commit up to the repo, and presents the PR link to you.
+##
+## IMPORTANT: This script currently only supports amending commits. If you need
+## to create discrete commits each time you push to a PR, this script is not
+## for you.
+##
+## NOTE: This script is able to perform some basic logic around fork vs upstream
+## repo, and master vs main primary branch, but nothing fancy. Ideally, this is
+## run on a fork.
+
+############################################################
+## YOUR VALUES ##
+#################
+
+## The Github organization you are a member of. It's this part of your GH repo URL:
+## https://github.com/THIS_IS_YOUR_GITHUB_ORG/docs/
+GITHUB_ORG="viamrobotics"
+
+############################################################
+## BEGIN SCRIPT ##
+##################
+
+FORCE_EMPTY_PUSH=0
+
+## Check for arguments passed to this script:
+while getopts ":f" opt; do
+  case ${opt} in
+    f )
+      FORCE_EMPTY_PUSH=1
+      ;;
+    \? )
+      echo -e "\nERROR: Invalid option: $OPTARG" 1>&2
+      echo "       push only supports the optional -f flag"
+      exit;
+      ;;
+  esac
+done
+
+## Exit if not in a valid git repo:
+GITROOT=`git rev-parse --show-toplevel 2>&1`
+if [ `echo $GITROOT | grep -c '^fatal: not a git repository'` -gt 0 ]; then
+   echo -e "\nERROR: Not in a git repo!"
+   echo -e "       You must run this program from within the git repo that you wish to push changes from.\n"
+   exit;
+fi
+
+## Exit if there are no staged changes to be committed:
+if [[ `git status | grep -c 'nothing to commit, working tree clean'` -gt 0 && $FORCE_EMPTY_PUSH == 0 ]]; then
+   echo -e "\nERROR: There's nothing to commit, working tree is clean.\n"
+   exit;
+fi
+
+## Determine if we are in a fork:
+GITHUB_USER_OR_ORG_AND_REPO=`git remote get-url origin | awk -F ':' '{print $2}' | sed 's%\.git$%%g'`
+if [ `echo $GITHUB_USER_OR_ORG_AND_REPO | grep -c '^$GITHUB_ORG'` -gt 0 ]; then
+   IS_FORK=0
+else
+   IS_FORK=1
+fi
+
+## Determine if primary upstream branch is 'master' or 'main':
+MASTER_OR_MAIN=`git ls-remote --symref origin HEAD | egrep '^ref: refs/heads/.*HEAD$' | sed 's%\tHEAD%%g' | awk -F '/' '{print $3}'`
+
+## Determine $BRANCHNAME:
+BRANCHNAME=`git rev-parse --abbrev-ref HEAD`
+
+if [[ $BRANCHNAME == $MASTER_OR_MAIN ]]; then
+   echo -e "\nERROR: This program does not support working directly in the $MASTER_OR_MAIN branch, due to:"
+   echo -e "        - Our $MASTER_OR_MAIN branch rejects direct commits: all edits must come from other branches"
+   echo -e "       Please create a new branch to work in, using \`workflow\`.\n"
+   exit;
+fi
+
+## Determine if we are up to date, ahead of, behind, or diverged from upstream:
+## NOTE: Not used yet, but needed for possible future enhancements.
+#GIT_MERGE_BASE=`git merge-base $BRANCHNAME origin/$MASTER_OR_MAIN`
+#LOCAL_BRANCH_STATUS=`git rev-parse $BRANCHNAME`
+#REMOTE_BRANCH_STATUS=`git rev-parse origin/$MASTER_OR_MAIN`
+#
+#if [[ $LOCAL_BRANCH_STATUS == $REMOTE_BRANCH_STATUS ]]; then
+#   WE_UPTODATE=1
+#elif [[ $GIT_MERGE_BASE == $LOCAL_BRANCH_STATUS ]]; then
+#   WE_BEHIND=1
+#elif [[ $GIT_MERGE_BASE == $REMOTE_BRANCH_STATUS ]]; then
+#   WE_AHEAD=1
+#else
+#   WE_DIVERGED=1
+#fi
+
+## Determine if we have committed to our new branch already:
+COMMITTED_YET=`git cherry --abbrev=9 $MASTER_OR_MAIN | awk '{print $2}' | head -1`
+
+# Show user current status, before taking any action:
+git status
+
+# Get current commit:
+CURRENT_COMMIT=`git rev-parse --short HEAD`
+
+## If this is our first commit, prompt for a first commit message, otherwise continually amend:
+if [ `echo  $COMMITTED_YET | grep -c $CURRENT_COMMIT` -lt 1 ]; then
+   echo -e "\nINPUT REQUIRED: You have not committed anything yet!"
+   read -p '                COMMIT MESSAGE: ' COMMIT_MESSAGE
+   git add .
+   git commit -m "$COMMIT_MESSAGE"
+   git push origin $BRANCHNAME
+elif [ `echo  $COMMITTED_YET | grep -c $CURRENT_COMMIT` -eq 1 ]; then
+   git add .
+   git commit --amend --no-edit
+   git push origin $BRANCHNAME -f
+else
+   echo -e "\nERROR: Unable to determine git commit status!"
+   echo -e "       You must manually commit or otherwise correct"
+   echo -e "       the situation!"
+   echo -e "       Aborting...\n"
+   exit;
+fi
+
+# Build GITHUB_PR_URL:
+GITHUB_PR_URL="https://github.com/$GITHUB_USER_OR_ORG_AND_REPO/pull/new/$BRANCHNAME"
+
+## Provide status report on what we just did:
+echo -e "\n##############################  PUSH COMPLETE!  ##############################"
+echo -e "\n   PULL REQUEST: $GITHUB_PR_URL"
+echo -e "\n##############################################################################\n"
+
+exit;
