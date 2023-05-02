@@ -1,10 +1,10 @@
-Automate your git-based docs-as-code workflow (like at Viam). For best results, place in $PATH!
+Automate your git-based docs-as-code workflow (like at Viam). For best results, place in `$PATH`!
 
 # Core Workflow Tools
 Use these tools to set up, check out, and commit your work:
 
 ## workflow
-Clones your fork into a new local directory in your defined docs $WORKSPACE, checks out a new branch, sets it up for work, then opens a new VS Code workspace from that directory.
+Clones your fork into a new local directory in your defined docs `$WORKSPACE`, checks out a new branch, sets it up for work, then opens a new VS Code workspace from that directory.
 
 _Usage:_ workflow DOCS-1234-fix-typo-in-example from anywhere on your machine.
 
@@ -20,7 +20,7 @@ Use these tools periodically to maintain your work environment:
 Updates your forked copy of docs with the latest from upstream. `workflow` automatically fetches the latest state of upstream's `main` branch each run, so `rebasefork` only serves to save us time on `workflow`'s initial clone & rebase step. You can optionally use the `-f` flag to completely reset your fork to match current upstream exactly: doing so discards any fork-specific commits!
 
 ## cleanspace
-Clean up any staging builds from all local git repos in $WORKSPACE.
+Clean up any staging builds from all local git repos in `$WORKSPACE`.
 
 # Example workflow usage, using these tools:
 
