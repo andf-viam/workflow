@@ -1,0 +1,69 @@
+#!/bin/bash
+
+## Brings your fork up to speed with upstream, and informs
+## you of how far behind you were! You can supply the -f
+## flag to OVERWRITE your forked repo to be the same as
+## upstream -- useful if you mangle your fork and want to
+## reset it.
+
+############################################################
+## YOUR VALUES ##
+#################
+
+## Your github username:
+GITUSER=andf-viam
+
+############################################################
+## BEGIN SCRIPT ##
+##################
+
+TMPDIR=/tmp/rebasefork$$
+
+FORCE=""
+
+## Check for FORCE override: for resetting your fork to be
+## identical to upstream. WARNING: destroys any fork-specific
+## commits!
+while getopts ":f" opt; do
+  case ${opt} in
+    f )
+      FORCE=1
+      ;;
+    \? )
+      echo -e "\nERROR: Invalid option: $OPTARG" 1>&2
+      echo "       rebasefork only supports the optional -f flag"
+      echo -e "       for resetting to match upstream\n"
+      exit
+      ;;
+  esac
+done
+
+mkdir -p $TMPDIR
+cd $TMPDIR
+git clone git@github.com:$GITUSER/docs.git
+cd docs
+git remote add upstream git@github.com:viamrobotics/docs.git
+
+# Current commit count before:
+BEFORE=`git rev-list --left-right --count origin | awk '{print $2}'`
+
+git fetch upstream
+
+# Proceed depending on user-supplied flag:
+if [ ! $FORCE ]; then
+   git rebase upstream/main
+   git push origin main
+else
+   git reset --hard upstream/main
+   git push origin main --force
+fi
+
+# New commit count after:
+AFTER=`git rev-list --left-right --count origin | awk '{print $2}'`
+
+# Just for fun, report number of commits moved:
+NUM_COMMITS=`echo "$AFTER - $BEFORE" | bc`
+echo "Moved ahead $NUM_COMMITS commits"
+
+rm -rf $TMPDIR
+
