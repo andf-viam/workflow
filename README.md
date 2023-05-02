@@ -11,7 +11,7 @@ _Usage:_ workflow DOCS-1234-fix-typo-in-example from anywhere on your machine.
 ## push
 Collects all your changes together under a commit, and creates a new - or updates an existing - PR. Pass the `-f` flag to force push an empty commit to trigger a site rebuild (or as an override in situations where a normal push fails).
 
-_Usage:_ push from within the git repo you wish to push, best used within the VSCode terminal.
+_Usage:_ `push` from within the git repo you wish to push, best used within the VSCode terminal.
 
 # Maintenance Workflow Tools
 Use these tools periodically to maintain your work environment:
