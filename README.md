@@ -6,7 +6,7 @@ Use these tools to set up, check out, and commit your work:
 ## workflow
 Clones your fork into a new local directory in your defined docs `$WORKSPACE`, checks out a new branch, sets it up for work, then opens a new VS Code workspace from that directory.
 
-_Usage:_ workflow DOCS-1234-fix-typo-in-example from anywhere on your machine.
+_Usage:_ `workflow DOCS-1234-fix-typo-in-example` from anywhere on your machine.
 
 ## push
 Collects all your changes together under a commit, and creates a new - or updates an existing - PR. Pass the `-f` flag to force push an empty commit to trigger a site rebuild (or as an override in situations where a normal push fails).
