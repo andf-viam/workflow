@@ -22,6 +22,18 @@ Updates your forked copy of docs with the latest from upstream. `workflow` autom
 ## cleanspace
 Clean up any staging builds from all local git repos in `$WORKSPACE`.
 
+# Convenience Workflow Tools
+
+## jira
+Open up the specified Jira ticket directly from the command line. Yes I am lazy.
+
+_Usage:_ `jira DOCS-1234` (or any valid ticket org/number, like `RSDK-1234`) from anywhere on your machine.
+
+## openup
+Open a VSCode workspace that had been previously created by `workflow`, by Jira ticket number.
+
+_Usage:_ `openup DOCS-1234` from anywhere on your machine.
+
 # Example workflow usage, using these tools:
 
 1. `workflow DOCS-1234-fix-typo-in-example`
