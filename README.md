@@ -23,6 +23,7 @@ Updates your forked copy of docs with the latest from upstream. `workflow` autom
 Clean up any staging builds from all local git repos in `$WORKSPACE`.
 
 # Convenience Workflow Tools
+Use these tools to save a bit of time:
 
 ## jira
 Open up the specified Jira ticket directly from the command line. Yes I am lazy.
